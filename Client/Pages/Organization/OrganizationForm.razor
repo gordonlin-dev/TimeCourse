@@ -1,0 +1,213 @@
+﻿@namespace Client.Pages
+<div style="height:100%">
+    <Row Style="padding:12px 24px; height:10%; display:flex; flex-direction:row; border-bottom:1px;">
+        @if(ViewMode != OrganizationModal.ViewMode.Code)
+        {
+            <Button Type="@AntDesign.ButtonType.Primary" Icon="@IconType.Outline.ArrowLeft" Class="button-custom" OnClick="()=>BackClickHandler.Invoke()">
+                Back
+            </Button>
+        }
+        <AntDesign.Text Style="font-size:1.5vmax; color:#001529; font-weight:bold; visibility:hidden">Organizations</AntDesign.Text>
+        <Button Type="@AntDesign.ButtonType.Primary" Style="margin-left:auto" Icon="@IconType.Outline.Close" Class="button-custom" OnClick="()=>CloseClickHandler.Invoke()">Close</Button>
+    </Row>
+    <Row Style="height:90%">
+        @if (ViewMode == OrganizationModal.ViewMode.Code)
+        {
+            <AntDesign.Col Style="width:100%">
+                <Row Style="height:35%"></Row>
+                <Row Justify="center">
+                    <div style="width:40%; margin-bottom:0.5vh; font-size:1.1vmax;">
+                        Enter your invitation code
+                    </div>
+                </Row>
+                <Row Justify="center">
+                    <Input Style="width:40%; margin-bottom:1vh; font-size:0.9vmax;" @bind-Value="_invitationCode"/>  
+                </Row>
+                <Row Justify="center">
+                    <div style="width:40%; display:flex; justify-content:flex-end">
+                        <Button Type="@AntDesign.ButtonType.Primary" Class="button-custom" OnClick="SubmitInvitationCode">Join</Button>
+                    </div>
+                </Row>
+            </AntDesign.Col>   
+        }else if (ViewMode == OrganizationModal.ViewMode.Create)
+        {
+            <AntDesign.Col Style="width:100%">
+                <Row Style="height:15%"></Row>
+                <Row Justify="center">
+                    <div style="width:40%; margin-bottom:3.5vh; font-size:1.3vmax; font-weight:bold;">
+                        Create an organization
+                    </div>
+                </Row>
+                <Row Justify="center">
+                    <div style="width:40%; margin-bottom:0.5vh; font-size:1.1vmax;">
+                        Name
+                    </div>
+                </Row>
+                <Row Justify="center">
+                    <Input Style="width:40%; margin-bottom:1vh; font-size:0.9vmax;" MaxLength="30" @bind-Value="_createViewModel.OrganizationName"/>  
+                </Row>
+                <Row Justify="center">
+                    <div style="width:40%; margin-bottom:0.5vh; font-size:1.1vmax;">
+                        Description
+                    </div>
+                </Row>
+                <Row Justify="center">
+                    <TextArea Style="width:40%; margin-bottom:3vh; font-size:0.9vmax;" MaxLength="250" @bind-Value="_createViewModel.OrganizationDescription"/> 
+                </Row>
+                <Row Justify="center">
+                    <div style="width:40%; display:flex; justify-content:flex-end">
+                        <Button Type="@AntDesign.ButtonType.Primary" Class="button-custom" OnClick="CreateOrganizationSave">Save</Button>
+                    </div>
+                </Row>              
+            </AntDesign.Col>
+        }
+        else
+        {
+            @if (SelectedOrganization.Owner == Profile.Id)
+            {
+                <AntDesign.Col Style="width:100%; overflow:scroll">
+                    <Row Style="height:5%"></Row>
+                    <Row Justify="center">
+                        <div style="width:40%; margin-bottom:3.5vh; font-size:1.3vmax; font-weight:bold;">
+                            @SelectedOrganization.OrganizationName
+                        </div>
+                    </Row>
+                    <Row Justify="center">
+                        <div style="width:40%; margin-bottom:0.5vh; font-size:1.1vmax;">
+                            Description
+                        </div>
+                    </Row>
+                    <Row Justify="center">
+                        <TextArea Style="width:40%; margin-bottom:1vh; font-size:0.9vmax;" MaxLength="250" @bind-Value="SelectedOrganization.OrganizationDescription"/> 
+                    </Row>
+                    <Row Justify="center">
+                        <div style="width:40%; margin-bottom:3vh; display:flex; justify-content:flex-end">
+                            <Button Type="@AntDesign.ButtonType.Primary" Class="button-custom"
+                                OnClick="UpdateOrganization">Save</Button>
+                        </div>
+                    </Row>
+                    <Row Justify="center">
+                        <div style="width:40%; margin-bottom:0.5vh; font-size:1.1vmax;">
+                            Invitation code
+                        </div>
+                    </Row>
+                    <Row Justify="center">
+                        <div style="width:40%; margin-bottom:1vh; font-size:0.9vmax;">
+                            @SelectedOrganization.InvitationCode                   
+                        </div>                  
+                    </Row>
+                    <Row Justify="center">
+                        <div style="width:40%; display:flex; margin-bottom:1vh; justify-content:center">
+                            <Button Type="@AntDesign.ButtonType.Primary" Class="button-custom" 
+                                Icon="@IconType.Outline.Undo" OnClick="RefreshInvitationCode">Refresh</Button>
+                        </div> 
+                    </Row>
+                    <Row Justify="center">
+                        <AntList Bordered DataSource="_memberProfiles" Style="width:80%; margin-top:1vmax;">
+                            <Header>
+                                <div style="display:flex">
+                                    <Text Style="font-size:1.3vmax; color:#001529; font-weight:bold;">Members</Text>
+                                </div>
+                            </Header>
+                            <ChildContent Context="item">
+                                <ListItem>
+                                    <div style="border-right: 2px solid black; height:100%; width:25%;">               
+                                        <span style="font-size:0.9vmax; font-weight:bold; padding-right:3px; word-break:break-word">@item.Name</span>
+                                    </div>
+                                    <div style="width:50%; padding-left:1vmax;">
+                                        <span style="font-size:0.9vmax; word-break:break-word">@item.Email</span>
+                                    </div>
+                                    <div style="width:25%; display:flex; justify-content:flex-end">
+                                        <Button Type="@AntDesign.ButtonType.Primary" Danger Icon="@IconType.Outline.Close"
+                                            Class="button-custom" OnClick="@(()=>RemoveMember(@item.Id))">Remove</Button>
+                                    </div>
+                                </ListItem>
+                            </ChildContent>
+                        </AntList>
+                    </Row>
+                </AntDesign.Col>
+            } else
+            {
+                <AntDesign.Col Style="width:100%">
+                    <Row Style="height:20%"></Row>
+                    <Row Justify="center">
+                        <div style="width:40%; margin-bottom:3.5vh; font-size:1.3vmax; font-weight:bold;">
+                            @SelectedOrganization.OrganizationName
+                        </div>
+                    </Row>
+                    <Row Justify="center">
+                        <div style="width:40%; margin-bottom:0.5vh; font-size:1.1vmax;">
+                            Description
+                        </div>
+                    </Row>
+                    <Row Justify="center">
+                        <TextArea Style="width:40%; margin-bottom:3vh; font-size:0.9vmax;" Disabled MaxLength="250" @bind-Value="SelectedOrganization.OrganizationDescription"/> 
+                    </Row>                   
+                </AntDesign.Col>
+            }
+        }
+    </Row>
+</div>
+@code {
+    [Parameter]
+    public OrganizationModal.ViewMode ViewMode{ get; set; }
+
+    [Parameter]
+    public Action BackClickHandler { get; set; }
+
+    [Parameter]
+    public Action CloseClickHandler { get; set; }
+
+    [Parameter]
+    public Func<Task> RefreshOrganizationList { get; set; }
+
+    [Parameter]
+    public User Profile { get; set; }
+
+    [Parameter]
+    public Organization SelectedOrganization{ get; set; }
+
+    [Inject]
+    public IOrganizationService _organizationService { get; set; }
+
+    private string _invitationCode = "";
+    private List<User> _memberProfiles = new List<User>();
+
+    private Organization _createViewModel = new Organization();
+
+
+    private async Task SubmitInvitationCode()
+    {
+        await _organizationService.JoinOrganizationAsync(_invitationCode);
+        _invitationCode = string.Empty;
+        await RefreshOrganizationList.Invoke();
+    }
+
+    private async Task CreateOrganizationSave()
+    {
+        var result = _organizationService.CreateOrganizationAsync(_createViewModel);
+        _createViewModel = new();
+        await RefreshOrganizationList.Invoke();
+    }
+
+    public async Task GetSelectedOrganizationParameter(string orgId)
+    {
+        _memberProfiles = await _organizationService.GetMembersAsync(orgId);
+    }
+
+    private async Task RemoveMember(string memberId)
+    {
+        _memberProfiles.RemoveAll(x => x.Id == memberId);
+        await _organizationService.RemoveMemberFromOrganization(SelectedOrganization.Id, memberId);
+    }
+
+    private async Task UpdateOrganization()
+    {
+        await _organizationService.UpdateOrganization(SelectedOrganization);
+    }
+    private async Task RefreshInvitationCode()
+    {
+        SelectedOrganization.InvitationCode = Guid.NewGuid();
+        await UpdateOrganization();
+    }
+}

@@ -1,0 +1,75 @@
+﻿@namespace Client.Pages
+<Row Style="height:100%">
+    <Col Span="12">
+        <div class="container-center-vertical">
+            <Row Style="width:100%" Justify="center">
+                <img src="images/Placeholder_logo.jpg" class="logo-site"/>
+            </Row>          
+        </div>   
+    </Col>
+    <Col Span="12">
+        <div class="container-center-vertical">
+            @if(_viewMode == ViewMode.Login)
+            {
+                <Row Style="width:100%" Justify="center">
+                    <h1 class="text-heading1">Log in</h1>
+                </Row>
+                <Row Style="width:100%" Justify="center">
+                    <a href="MicrosoftIdentity/Account/SignIn">
+                        <Row Align="middle">
+                            <img src="images/MS_Logo.png" class="logo-login"/>
+                            <div class="text-login">Log in with Microsoft</div>
+                        </Row>
+                    </a>
+                </Row>
+                <Row Style="width:100%; margin-top:1.5vmax;" Justify="center">
+                    <Button OnClick="SignUpClickHandler"
+                        Type="@AntDesign.ButtonType.Primary" 
+                        Shape="@ButtonShape.Round" 
+                        Style="font-size:1.5vmax; height:auto; background-color:#001529 !important; border-color:#001529 !important">
+                            Sign up</Button>
+                </Row>
+            }
+            else
+            {
+                <Row Style="width:100%" Justify="center">
+                    <h1 class="text-heading1">Sign up</h1>
+                </Row>
+                <Row Style="width:100%" Justify="center">
+                    <a href="MicrosoftIdentity/Account/SignIn">
+                        <Row Align="middle">
+                            <img src="images/MS_Logo.png" class="logo-login"/>
+                            <div class="text-login">Sign up with Microsoft</div>
+                        </Row>
+                    </a>
+                </Row>
+                <Row Style="width:100%; margin-top:1.5vmax;" Justify="center">
+                    <Button OnClick="LoginClickHandler"
+                        Type="@AntDesign.ButtonType.Primary" 
+                        Shape="@ButtonShape.Round" 
+                        Style="font-size:1.5vmax; height:auto; background-color:#001529 !important; border-color:#001529 !important">
+                            Log in</Button>
+                </Row>
+            }
+        </div>
+    </Col>
+</Row>
+
+@code {
+    private enum ViewMode
+    {
+        Login = 0,
+        Signup = 1
+    }
+    private ViewMode _viewMode = ViewMode.Login;
+
+    private void SignUpClickHandler()
+    {
+        _viewMode = ViewMode.Signup;
+    }
+
+    private void LoginClickHandler()
+    {
+        _viewMode = ViewMode.Login;
+    }
+}

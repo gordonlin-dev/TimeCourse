@@ -1,0 +1,219 @@
+﻿<RadzenTemplateForm Data="_viewModel">
+    <div class="row" style="margin-bottom:1vh">
+        <div class="col-md-5">
+            <RadzenLabel Text="Select an organization" Style="font-size:1.0vmax" />
+        </div>
+        <div class="col-md-7">
+            <RadzenDropDown AllowClear="true" TValue="string" AllowFiltering="true" Disabled="Mode == ViewMode.Attendee"
+                Data="_organizations" TextProperty="OrganizationName" ValueProperty="Id" 
+                Style="width:100%" @bind-Value="_viewModel.HostOrganizationId"
+                />
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:1vh">
+        <div class="col-md-5">
+            <RadzenLabel Text="Start time" Style="font-size:1.0vmax" />           
+        </div>
+        <div class="col-md-7">
+            <RadzenDatePicker @bind-Value="@_viewModel.StartTime" Disabled="Mode == ViewMode.Attendee" Name="Start time" ShowTime="true" DateFormat="HH:mm" TimeOnly="true" Style="width:100%" />
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:1vh">
+        <div class="col-md-5">
+            <RadzenLabel Text="End time" Style="font-size:1.0vmax" />           
+        </div>
+        <div class="col-md-7">
+            <RadzenDatePicker @bind-Value="@_viewModel.EndTime" Disabled="Mode == ViewMode.Attendee" Name="End time" ShowTime="true" DateFormat="HH:mm" TimeOnly="true" Style="width:100%" />
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:1vh">
+        <div class="col-md-5">
+            <RadzenCheckBox @bind-Value="_viewModel.RecurranceCheckbox" Disabled="Mode == ViewMode.Attendee" Name="RecurranceCheckbox" TValue="bool" />
+            <RadzenLabel Text="Recurring?" Component="RecurranceCheckbox" Style="margin-left: 8px; vertical-align: middle; font-size:1.0vmax" />  
+        </div>
+    </div>
+    @if (_viewModel.RecurranceCheckbox)
+    {
+        <div class="row" style="margin-bottom:1vh">
+            <div class="col-md-12">
+                <RadzenRadioButtonList @bind-Value="@_viewModel.AvailabilityRecurrance" Disabled="Mode == ViewMode.Attendee"
+                    TValue="AvailabilityRecurrance">
+                    <Items>
+                        <RadzenRadioButtonListItem Text="Daily" Style="font-size:1.0vmax" Value="AvailabilityRecurrance.Daily"/>
+                        <RadzenRadioButtonListItem Text="Weekly" Style="font-size:1.0vmax" Value="AvailabilityRecurrance.Weekly"/>
+                        <RadzenRadioButtonListItem Text="Monthly" Style="font-size:1.0vmax" Value="AvailabilityRecurrance.Monthly"/>
+                    </Items>                
+                </RadzenRadioButtonList>
+            </div>
+        </div>
+        <div class="row" style="margin-bottom:1vh">
+            <div class="col-md-5">
+                <RadzenLabel Text="Recurring until" Style="font-size:1.0vmax" /> 
+            </div>
+            <div class="col-md-7">
+                <RadzenDatePicker @bind-Value="@_viewModel.RecurranceEndDate" Disabled="Mode == ViewMode.Attendee" Name="Recurring until" Style="width:100%" />
+            </div>
+        </div>
+    }
+    <div class="row" style="margin-bottom:1vh">
+        <div class="col-md-5">
+            <RadzenLabel Text="Description" Style="font-size:1.0vmax" /> 
+        </div>
+        <div class="col-md-7">
+            <RadzenTextArea @bind-Value="_viewModel.Description" Disabled="Mode == ViewMode.Attendee" MaxLength="250" Style="width:100%" />
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:3vh">
+        <div class="col-md-5">
+            <RadzenLabel Text="Appointment duration" Style="font-size:1.0vmax" /> 
+        </div>
+        <div class="col-md-7">
+            <RadzenTextBox @bind-Value="_viewModel.AppointmentDuration"  Disabled="Mode == ViewMode.Attendee" Style="width:70%"/>
+            <RadzenLabel Text="Minutes" Style="font-size:0.9vmax; width:25%" /> 
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6" style="">
+            @if (Mode == ViewMode.Host_Edit)
+            {
+                <Button Type="@AntDesign.ButtonType.Primary" Danger Class="button-custom" OnClick="Delete">Delete</Button>
+            }
+        </div>
+        <div class="col-md-6" style="display:flex; justify-content:flex-end;">
+            @if(Mode == ViewMode.Host_Create){
+                <Button Type="@AntDesign.ButtonType.Primary" Class="button-custom" OnClick="Save">Create</Button>
+            }else if(Mode == ViewMode.Host_Edit){
+                <Button Type="@AntDesign.ButtonType.Primary" Class="button-custom" OnClick="Update">Update</Button>
+            }           
+        </div>
+    </div>
+    @if (Mode == ViewMode.Attendee)
+    {
+        <div class="row" style="margin-bottom:3vh">
+            <div class="col-md-12">
+                <RadzenListBox @bind-Value=@_viewModel.SelectedAppointment Data="Model.Appointments" ValueProperty="Id" Style="width:100%">
+                    <Template Context="tContext">
+                        @((tContext as Appointment).StartTime.ToLocalTime().ToShortTimeString()) - @((tContext as Appointment).EndTime.ToLocalTime().ToShortTimeString())
+                    </Template>
+                </RadzenListBox>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12" style="display:flex; justify-content:flex-end;">
+                <Button Type="@AntDesign.ButtonType.Primary" Class="button-custom" OnClick="BookAppointment">Book appointment</Button>
+            </div>
+        </div>
+    }
+</RadzenTemplateForm>
+
+@code {
+    public class ViewModel
+    {
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public DateTime? RecurranceEndDate{ get; set; }
+        public string AppointmentDuration { get; set; } = "15";
+        public string Description { get; set; } = string.Empty;
+        public string HostOrganizationId { get; set; }
+        public AvailabilityRecurrance AvailabilityRecurrance {get; set;}
+        public bool RecurranceCheckbox { get; set; }
+        public string SelectedAppointment { get; set; }
+    }
+    public enum ViewMode
+    {
+        Host_Create = 0,
+        Host_Edit = 1,
+        Attendee = 2
+    }
+    private ViewModel _viewModel = new ViewModel();
+
+    [Inject]
+    private IOrganizationService _organizationService { get; set; }
+    [Inject]
+    private IAppointmentService _appointmentService { get; set; }
+    [Inject]
+    private Client.Services.IUserService _userService { get; set; }
+    [Inject]
+    private DialogService _dialogService { get; set; }
+    [Parameter]
+    public DateTime Date{ get; set; }
+    [Parameter]
+    public Availability Model { get; set; }
+    [Parameter]
+    public ViewMode Mode { get; set; }
+
+    private List<Organization> _organizations = new List<Organization>();
+    private User _userProfile;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        if(Model != null)
+        {
+            _viewModel.StartTime = Model.StartTime;
+            _viewModel.EndTime = Model.EndTime;
+            _viewModel.RecurranceEndDate = Model.RecurranceEndDate;
+            _viewModel.AppointmentDuration = Model.AppointmentDuration.ToString();
+            _viewModel.Description = Model.Description;
+            _viewModel.HostOrganizationId = Model.HostOrganizationId;
+            _viewModel.AvailabilityRecurrance = Model.AvailabilityRecurrance.HasValue? Model.AvailabilityRecurrance.Value : AvailabilityRecurrance.Daily;
+            _viewModel.RecurranceCheckbox = Model.RecurranceEndDate.HasValue;
+        }
+        _userProfile = await _userService.GetProfile();
+        _organizations = await _organizationService.GetOrganizationsAsync();
+        _organizations = _organizations.Where(x => x.Owner == _userProfile.Id).ToList();
+        if(Mode == ViewMode.Attendee){
+            Model.Appointments.ForEach(x => x.Id = Guid.NewGuid().ToString());
+        }      
+    }
+
+    private async Task Update(){
+        Model.HostOrganizationId = _viewModel.HostOrganizationId;
+        Model.StartTime = Date.Date.AddHours(_viewModel.StartTime.Value.Hour).AddMinutes(_viewModel.StartTime.Value.Minute).ToUniversalTime();
+        Model.EndTime = Date.Date.AddHours(_viewModel.EndTime.Value.Hour).AddMinutes(_viewModel.EndTime.Value.Minute).ToUniversalTime();
+        Model.Description = _viewModel.Description;
+        Model.AppointmentDuration = int.Parse(_viewModel.AppointmentDuration);
+        Model.AvailabilityRecurrance = _viewModel.AvailabilityRecurrance;
+        if (_viewModel.RecurranceEndDate.HasValue)
+        {
+            Model.RecurranceEndDate = _viewModel.RecurranceEndDate.Value;
+        }
+        await _appointmentService.UpdateAvailability(Model);
+    }
+
+    private async Task Delete(){
+        await _appointmentService.DeleteAvailability(Model.Id);
+        _dialogService.Close();
+
+    }
+
+    private async Task Save()
+    {
+        Availability availability = new Availability()
+        {
+            HostOrganizationId = _viewModel.HostOrganizationId,
+            StartTime = Date.Date.AddHours(_viewModel.StartTime.Value.Hour).AddMinutes(_viewModel.StartTime.Value.Minute).ToUniversalTime(),
+            EndTime = Date.Date.AddHours(_viewModel.EndTime.Value.Hour).AddMinutes(_viewModel.EndTime.Value.Minute).ToUniversalTime(),
+            Description = _viewModel.Description,
+            AppointmentDuration = int.Parse(_viewModel.AppointmentDuration),
+            AvailabilityRecurrance = _viewModel.AvailabilityRecurrance
+        };
+        if (_viewModel.RecurranceEndDate.HasValue)
+        {
+            availability.RecurranceEndDate = _viewModel.RecurranceEndDate.Value;
+        }
+        await _appointmentService.CreateAvailability(availability);
+        _viewModel = new ViewModel();
+    }
+
+    private async Task BookAppointment(){
+        var selectedAppointment = Model.Appointments.Find(x => x.Id == _viewModel.SelectedAppointment);
+        selectedAppointment.Description = Model.Description;
+        selectedAppointment.AvailabilityId = Model.Id;
+        selectedAppointment.AppointmentType = AppointmentType.Appointment;
+        selectedAppointment.Id = null;
+        await _appointmentService.CreateAppointment(selectedAppointment);
+        Model.Appointments.Remove(selectedAppointment);
+        StateHasChanged();
+    } 
+}

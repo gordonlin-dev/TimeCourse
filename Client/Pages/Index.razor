@@ -1,0 +1,61 @@
+﻿@page "/"
+@using Microsoft.Graph
+
+<div class="container-center-content-flex">
+    <Spin Size="large"/>
+</div>
+
+@code {
+    [CascadingParameter]
+    public IModalService Modal { get; set; }
+
+    [Inject]
+    private NavigationManager _nav { get; set; }
+    [Inject]
+    private IJwtService _jwtService { get; set; }
+    [Inject]
+    public AuthenticationStateProvider AuthenticationStateProvider { get; set; }
+
+    [Inject]
+    private Services.IUserService _userService { get; set; }
+    [Inject]
+    private IAppointmentService _appointmentService { get; set; }
+    [Inject]
+    private IOrganizationService _organizationService { get; set; }
+    [Inject]
+    private IMicrosoftGraphService _microsoftGraphService { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity.IsAuthenticated)
+        {
+            var token = _jwtService.GenerateToken(user);
+            var newToken = await _userService.Auth(token);
+            _userService.SetBearerToken(newToken);
+            _appointmentService.SetBearerToken(newToken);
+            _organizationService.SetBearerToken(newToken);
+            Navigate();
+        }       
+    }
+    private async void Navigate()
+    {
+        var organizations = await _userService.GetUserOrganizationsAsync();
+        if(organizations.Count() == 0)
+        {
+            var options = new Blazored.Modal.ModalOptions()
+            {
+                DisableBackgroundCancel = true,
+                HideCloseButton = true,
+                HideHeader = true
+            };
+            Modal.Show<OrganizationModal>("", options);
+        }
+        else
+        {
+            await _microsoftGraphService.SyncSchedule(DateTime.UtcNow.Month);
+            _nav.NavigateTo("Home");
+        }
+    }
+}

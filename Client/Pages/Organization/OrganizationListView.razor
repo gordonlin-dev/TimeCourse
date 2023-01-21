@@ -1,0 +1,54 @@
+﻿@namespace Client.Pages
+
+<div class="organization-list-scroll-container">
+    <AntList Bordered DataSource="@Organizations" Style="width:100%; border:0px !important">
+        <Header>
+            <div style="display:flex;">
+                <Text Style="font-size:1.5vmax; color:#001529; font-weight:bold;">Organizations</Text>
+                <Button Type="@AntDesign.ButtonType.Primary" Icon="@IconType.Outline.Plus" Style="margin-left:auto;" Class="button-custom" OnClick="CreateClickHandler">New</Button>
+            </div>
+        </Header>
+        <ChildContent Context="item">
+            <ListItem OnClick="@(()=>HandleOrganizationClick(item))">
+                <div style="border-right: 2px solid black; height:100%; width:15%;">
+                    @if (Profile.Id == item.Owner)
+                    {
+                        <Icon Type="@IconType.Fill.Crown" Style="height:100%; padding-right:0.5vmax"></Icon>
+                    }else{
+                        <Icon Type="@IconType.Fill.Crown" Style="height:100%; padding-right:0.5vmax; visibility:hidden"></Icon>
+                    }                 
+                    <span style="font-size:1.1vmax; font-weight:bold; padding-right:3px; word-break:break-word">@item.OrganizationName</span>
+                </div>
+                <div style="width:85%; padding-left:1vmax;">
+                    <span style="font-size:0.9vmax; word-break:break-word">@item.OrganizationDescription</span>
+                </div>
+            </ListItem>
+        </ChildContent>
+    </AntList>
+</div>
+
+
+@code {
+    [Parameter]
+    public List<Organization> Organizations { get; set; }
+    [Parameter]
+    public Action CreateOrganizationClickHandler { get; set; }
+
+    [Parameter]
+    public OrganizationModal.ViewMode ViewMode { get; set; }
+
+    [Parameter]
+    public Action<Organization> OrganizationListClickHandler{ get; set; }
+    [Parameter]
+    public User Profile{ get; set; }
+
+    private void CreateClickHandler()
+    {
+        CreateOrganizationClickHandler.Invoke();
+    }
+
+    private void HandleOrganizationClick(Organization org)
+    {
+        OrganizationListClickHandler.Invoke(org);
+    }
+}

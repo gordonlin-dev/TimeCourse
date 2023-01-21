@@ -1,0 +1,145 @@
+﻿@page "/Home"
+<div style="height:5%; width:100%; display:flex; justify-content:flex-end;">
+    <Button Type="@AntDesign.ButtonType.Primary" Icon="@IconType.Outline.CloudUpload" OnClick="@PushAppointmentToOutlook"> Save to Outlook</Button>
+</div>
+<div style="height:95%">
+    <RadzenScheduler @ref=@_scheduler Data="@_calendarItems"
+        TItem="CalendarItem" SelectedIndex="1" StartProperty="StartTime" EndProperty="EndTime" 
+        TextProperty="Description" Style="height:100%; width:100%"
+        AppointmentRender="@CalendarItemRender" LoadData="PanelChange"
+        SlotSelect="@SlotSelect"
+        AppointmentSelect=@CalendarItemSelect>
+        <RadzenWeekView />
+        <RadzenMonthView />
+    </RadzenScheduler>
+</div>
+@code {
+    [Inject]
+    IAppointmentService _appointmentService { get; set; }
+    [Inject]
+    IMicrosoftGraphService _microsoftGraphService { get; set; }
+    [Inject]
+    DialogService _dialogService{ get; set; }
+    [Inject]
+    Services.IUserService _userService{ get; set; }
+
+    RadzenScheduler<CalendarItem> _scheduler;
+    private List<CalendarItem> _calendarItems = new List<CalendarItem>();
+    private List<Appointment> _appointments;
+    private List<Availability> _availabilities;
+    private DateTime _start;
+    private DateTime _end;
+    private User _profile = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _profile = await _userService.GetProfile();
+    }
+
+    private void GenerateCalendarItems()
+    {
+        _calendarItems = new List<CalendarItem>();
+        foreach(var appointment in _appointments)
+        {
+            CalendarItemType type;
+            if(appointment.AppointmentType == AppointmentType.ScheduleItem)
+            {
+                type = CalendarItemType.ScheduleItem;
+            }
+            else
+            {
+                type = CalendarItemType.Appointment;
+            }
+            _calendarItems.Add(new CalendarItem()
+            {
+                StartTime = appointment.StartTime,
+                EndTime = appointment.EndTime,
+                Description = appointment.Description,
+                Id = appointment.Id,
+                Type = type
+            });
+        }
+        foreach(var availability in _availabilities)
+        {
+            _calendarItems.Add(new CalendarItem()
+            {
+                StartTime = availability.StartTime,
+                EndTime = availability.EndTime,
+                Description = availability.Description,
+                Id = availability.Id,
+                Type = CalendarItemType.Availability
+            });
+        }
+    }
+
+    private void CalendarItemRender(SchedulerAppointmentRenderEventArgs<CalendarItem> args)
+    {
+        var personalCalendarEventColor = "#e0e1e4";
+        var availabilityCalendarEventColor = "#BFE5FF";
+        var appointmentCalendarEventColor = "#001529";
+        if (args.Data.Type == CalendarItemType.ScheduleItem)
+        {
+            args.Attributes["style"] = "background: #e0e1e4";
+        }else if (args.Data.Type == CalendarItemType.Appointment)
+        {
+            args.Attributes["style"] = "background-color: #001529; color:white";
+        }
+        else
+        {
+            args.Attributes["style"] = "background-color: #BFE5FF; color:black";
+        }
+    }
+
+    private async Task PanelChange(SchedulerLoadDataEventArgs args)
+    {
+        _start = args.Start;
+        _end = args.End;
+        await _microsoftGraphService.SyncSchedule(args.Start, args.End);
+        _appointments = await _appointmentService.GetAppointmentsByDateRange(args.Start, args.End);
+        _availabilities = await _appointmentService.GetAvailabilitiesByDateRange(args.Start, args.End);
+        GenerateCalendarItems();
+    }
+
+    private async Task SlotSelect(SchedulerSlotSelectEventArgs args)
+    {
+        await _dialogService.OpenAsync<AvailabilityComponent>("Create new availability", 
+             new Dictionary<string, object> { { "Date", args.Start.Date }, { "Mode", AvailabilityComponent.ViewMode.Host_Create} });
+        _appointments = await _appointmentService.GetAppointmentsByDateRange(_start, _end);
+        _availabilities = await _appointmentService.GetAvailabilitiesByDateRange(_start, _end);
+        GenerateCalendarItems();
+    }
+
+    private async Task CalendarItemSelect(SchedulerAppointmentSelectEventArgs<CalendarItem> args)
+    {
+        var item = args.Data;
+        if(item.Type == CalendarItemType.Availability)
+        {
+            var availability = _availabilities.Find(x => x.Id == item.Id);
+            if(_profile.Id == availability.HostId)
+            {
+                await _dialogService.OpenAsync<AvailabilityComponent>("Update availability", 
+                    new Dictionary<string, object> { { "Date", args.Start.Date },
+                    { "Mode", AvailabilityComponent.ViewMode.Host_Edit}, {"Model", availability }});
+            }
+            else
+            {
+                await _dialogService.OpenAsync<AvailabilityComponent>("Create new availability", 
+                    new Dictionary<string, object> { { "Date", args.Start.Date },
+                    { "Mode", AvailabilityComponent.ViewMode.Attendee}, {"Model", availability }});
+            }
+
+        }else if(item.Type == CalendarItemType.Appointment)
+        {
+            var appointment = _appointments.Find(x => x.Id == item.Id);
+            await _dialogService.OpenAsync<AppointmentComponent>("Manage appointment",
+                    new Dictionary<string, object> {{"Model", appointment }});
+        }
+        _appointments = await _appointmentService.GetAppointmentsByDateRange(_start, _end);
+        _availabilities = await _appointmentService.GetAvailabilitiesByDateRange(_start, _end);
+        GenerateCalendarItems();
+    }
+
+    private async Task PushAppointmentToOutlook(){
+        await _microsoftGraphService.CreateCalendarEvent(_appointments);
+    }
+}

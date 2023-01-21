@@ -1,0 +1,25 @@
+﻿@inherits LayoutComponentBase
+
+<AuthorizeView>
+    <Authorized>
+        <Layout>
+            <Header Class="app-header"><TopMenu/></Header>
+            <Content class="app-body">
+                @Body
+            </Content>
+            <Footer class="app-footer"></Footer>
+        </Layout>
+    </Authorized>
+    <NotAuthorized>
+        <Layout>
+            <Header class="app-header-big">
+
+            </Header>
+            <Content class="app-body-small">
+                <LandingPage></LandingPage>
+            </Content>
+            <Footer class="app-footer-big"></Footer>
+        </Layout>
+    </NotAuthorized>
+</AuthorizeView>
+

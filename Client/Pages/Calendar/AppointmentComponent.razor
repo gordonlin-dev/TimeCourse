@@ -1,0 +1,48 @@
+﻿<RadzenTemplateForm Data="_viewModel">
+    <div class="row" style="margin-bottom:1vh">
+        <div class="col-md-5">
+            <RadzenLabel Text=@(_viewModel.StartTime.Value.ToShortTimeString() + " - " + _viewModel.EndTime.Value.ToShortTimeString()) Style="font-size:1.1vmax" />
+        </div>
+        <div class="col-md-7">
+            <RadzenLabel Text=@_viewModel.Description Style="font-size:1.1vmax" />
+        </div>
+    </div>
+    <div class="row" style="">
+        <div class="col-md-12" style="display:flex; justify-content:flex-end;">
+            <Button Type="@AntDesign.ButtonType.Primary" Class="button-custom" Danger OnClick="CancelAppointment">Cancel appointment</Button>
+        </div>
+    </div>
+</RadzenTemplateForm>
+
+@code {
+
+    public class ViewModel
+    {
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public string Description { get; set; }
+    }
+
+    private ViewModel _viewModel = new ViewModel();
+
+    [Inject]
+    private IAppointmentService _appointmentService { get; set; }
+
+    [Inject]
+    private DialogService _dialogService { get; set; }
+
+    [Parameter]
+    public Appointment Model { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _viewModel.Description = Model.Description;
+        _viewModel.StartTime = Model.StartTime;
+        _viewModel.EndTime = Model.EndTime;
+    }
+
+    private async Task CancelAppointment(){
+        await _appointmentService.DeleteAppointment(Model.Id);
+        _dialogService.Close();
+    }
+}

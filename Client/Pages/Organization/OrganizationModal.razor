@@ -1,0 +1,99 @@
+﻿@namespace Client.Pages
+<Layout>
+    <Content Style="width:90vw; height:70vh">
+        <Row Style="width:100%; height:100%">
+            <Col Span="12" Style="background-color:white">
+                <OrganizationListView Organizations="_organizations" 
+                    @ref="_listView"
+                    ViewMode="_viewMode"
+                    CreateOrganizationClickHandler="CreateOrganizationClickHandler"
+                    OrganizationListClickHandler="OrganizationListClickHandler"
+                    Profile="_profile"
+                >
+                </OrganizationListView>
+            </Col>
+            <Col Span="12">
+                <OrganizationForm ViewMode="_viewMode" BackClickHandler="BackClickHandler" 
+                    CloseClickHandler="CloseModal" RefreshOrganizationList="GetOrganizations"
+                    Profile="_profile" SelectedOrganization="_selectedOrganization"
+                    @ref="_formView"
+                >
+                </OrganizationForm>
+            </Col>
+        </Row>
+    </Content>
+</Layout>
+
+@code {
+    [CascadingParameter] 
+    Blazored.Modal.BlazoredModalInstance ModalInstance { get; set; }
+    [Inject]
+    IOrganizationService _organizationService { get; set; }
+    [Inject]
+    Services.IUserService _userService{ get; set; }
+
+    private User _profile = new();
+    private OrganizationListView _listView;
+    private OrganizationForm _formView;
+    private List<Organization> _organizations { get; set; } = new();
+
+    private Organization _selectedOrganization{ get; set; }
+
+    private ViewMode _viewMode = ViewMode.Code;
+
+    private System.Timers.Timer _timer = new System.Timers.Timer();
+
+    public enum ViewMode
+    {
+        Code = 0,
+        Create = 1,
+        View = 2,
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetOrganizations();
+        _profile = await _userService.GetProfile();
+
+        _timer.Interval = 3000;
+        _timer.Elapsed += async (obj, eventArg) =>
+        {
+            await InvokeAsync(GetOrganizations);
+        };
+        _timer.Start();
+    }
+
+    private async Task GetOrganizations()
+    {
+        _organizations = await _organizationService.GetOrganizationsAsync();
+        StateHasChanged();
+    }
+
+    private void CreateOrganizationClickHandler()
+    {
+        _viewMode = ViewMode.Create;
+        StateHasChanged();
+    }
+
+    private void BackClickHandler()
+    {
+        _viewMode = ViewMode.Code;
+        StateHasChanged();
+    }
+
+    private async void CloseModal(){
+        _timer.Dispose();
+        await ModalInstance.CloseAsync();
+    }
+
+    public async void OrganizationListClickHandler(Organization organization)
+    {
+        _selectedOrganization = organization;
+        _viewMode = ViewMode.View;
+        if(_profile.Id == organization.Owner)
+        {
+            await _formView.GetSelectedOrganizationParameter(_selectedOrganization.Id);
+        }
+        StateHasChanged();
+    }
+}

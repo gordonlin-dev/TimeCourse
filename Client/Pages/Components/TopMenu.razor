@@ -1,0 +1,21 @@
+﻿@namespace Client
+<div class="menu-top" @onclick="@(() => OpenOrganizationModal())">
+    Organizations
+</div>
+
+@code {
+    [CascadingParameter]
+    public IModalService Modal { get; set; }
+
+    private void OpenOrganizationModal()
+    {
+        var options = new Blazored.Modal.ModalOptions()
+        {
+            DisableBackgroundCancel = true,
+            HideCloseButton = true,
+            HideHeader = true
+        };
+        Modal.Show<OrganizationModal>("", options);
+    }
+}
+
