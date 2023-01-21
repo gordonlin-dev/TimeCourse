@@ -13,3 +13,8 @@ TimeCourse is an online appointment system for professors to host office hours. 
 
 ### Database
 - MongoDB
+
+## Demo
+Sign In
+
+![Alt Text](https://github.com/gordonlin-dev/TimeCourse/blob/master/resources/timecourse_login.gif)
